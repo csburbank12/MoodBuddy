@@ -1,105 +1,159 @@
 import { z } from 'zod';
+import { supabase, dbService } from './db';
 
-// Types
+
 export interface User {
   id: string;
   email: string;
   emailConfirmed: boolean;
 }
 
-export interface Profile {
-  id: string;
-  full_name: string;
-  role: 'student' | 'staff';
-  grade_level?: string;
-  age_group?: 'kids' | 'teens' | 'adults';
-  specialization?: string;
-  profile_completed: boolean;
-}
 
-// Validation schemas
 const userSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   emailConfirmed: z.boolean()
 });
 
-const profileSchema = z.object({
-  id: z.string(),
-  full_name: z.string(),
-  role: z.enum(['student', 'staff']),
-  grade_level: z.string().optional(),
-  age_group: z.enum(['kids', 'teens', 'adults']).optional(),
-  specialization: z.string().optional(),
-  profile_completed: z.boolean()
-});
 
 // Auth service
-class AuthService {
-  async signIn(email: string, password: string): Promise<{ user: User | null; error: Error | null }> {
-    try {
-      // For demo purposes, accept test accounts
-      if (email === 'student@test.edu' && password === 'Student123!') {
-        const user = {
-          id: '00000000-0000-0000-0000-000000000001',
-          email: 'student@test.edu',
-          emailConfirmed: true
-        };
-        localStorage.setItem('user', JSON.stringify(user));
-        return { user, error: null };
+export class AuthService {
+    async createTestUser(
+        email: string,
+        password: string,
+        full_name: string,
+        role: 'student' | 'staff'
+    ): Promise<{ user: User | null; error: Error | null }> {
+        try {
+            // 1. Create user with Supabase Auth
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+            });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            if (data.user) {
+                const user: User = {
+                    id: data.user.id,
+                    email: data.user.email!,
+                    emailConfirmed: !!data.user.email_confirmed_at,
+                };
+
+                // 2. Save user data in the 'users' table
+                await dbService.createUser({ id: user.id, email: user.email, full_name, role });
+
+                // 3. Create profile in localStorage (since we are not using profiles in the database anymore)
+
+
+                return { user, error: null };
+            }
+            throw new Error('Failed to create user');
+        } catch (err) {
+            return {
+                user: null,
+                error: err instanceof Error ? err : new Error('Failed to create user'),
+            };
+        }
+    }
+    async signIn(
+        email: string,
+        password: string
+    ): Promise<{ user: User | null; error: Error | null }> {
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                throw new Error('Invalid email or password');
+            }
+
+            if (data.user) {
+                const user: User = {
+                    id: data.user.id,
+                    email: data.user.email!,
+                    emailConfirmed: !!data.user.email_confirmed_at,
+                };
+                return { user, error: null };
+            }
+
+            throw new Error('Failed to sign in');
+        } catch (err) {
+            return {
+                user: null,
+                error: err instanceof Error ? err : new Error('Failed to sign in'),
+            };
+        }
+    }
+
+    async signUp(
+        email: string,
+        password: string
+    ): Promise<{ user: User | null; error: Error | null }> {
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+            });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            if (data.user) {
+                const user: User = {
+                    id: data.user.id,
+                    email: data.user.email!,
+                    emailConfirmed: !!data.user.email_confirmed_at,
+                };
+                return { user, error: null };
+            }
+
+            throw new Error('Failed to sign up');
+        } catch (err) {
+            return {
+                user: null,
+                error: err instanceof Error ? err : new Error('Failed to sign up'),
+            };
+        }
+    }
+
+    async signOut(): Promise<void> {
+        await supabase.auth.signOut();
+    }
+
+    async resetPassword(email: string): Promise<void> {
+      const { error } = await supabase.auth.resetPasswordForEmail({ email });
+      if (error) {
+        throw error;
       }
-
-      if (email === 'staff@test.edu' && password === 'Staff123!') {
-        const user = {
-          id: '00000000-0000-0000-0000-000000000002',
-          email: 'staff@test.edu',
-          emailConfirmed: true
-        };
-        localStorage.setItem('user', JSON.stringify(user));
-        return { user, error: null };
-      }
-
-      throw new Error('Invalid email or password');
-    } catch (err) {
-      return {
-        user: null,
-        error: err instanceof Error ? err : new Error('Failed to sign in')
-      };
     }
-  }
 
-  async signOut(): Promise<void> {
-    localStorage.removeItem('user');
-  }
+    async getCurrentUser(): Promise<User | null> {
+        const { data: { session } } = await supabase.auth.getSession();
 
-  async resetPassword(email: string): Promise<void> {
-    // In a real app, this would send a password reset email
-    console.log('Password reset requested for:', email);
-  }
+        if (session?.user) {
+            return { id: session.user.id, email: session.user.email!, emailConfirmed: !!session.user.email_confirmed_at };
+        }
 
-  getProfile(userId: string): Profile | null {
-    const profileData = localStorage.getItem(`profile_${userId}`);
-    if (!profileData) return null;
-    
-    try {
-      const profile = JSON.parse(profileData);
-      return profileSchema.parse(profile);
-    } catch {
-      return null;
+        return null;
     }
-  }
+    async getProfile(userId: string) {
+        const profile = await dbService.getUser(userId);
 
-  getCurrentUser(): User | null {
-    const userData = localStorage.getItem('user');
-    if (!userData) return null;
+        if (profile) {
+            return profile;
+        }
 
-    try {
-      const user = JSON.parse(userData);
-      return userSchema.parse(user);
-    } catch {
-      return null;
+        return null;
+
+
     }
-  }
+
 }
 
 export const auth = new AuthService();

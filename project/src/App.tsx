@@ -13,13 +13,6 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading, setRedirectPath } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  
-  console.log("🔍 PrivateRoute Check", {
-    path: location.pathname,
-    authenticated: !!user,
-    hasProfile: !!profile,
-    loading
-  });
 
   if (loading) {
     return (
@@ -33,22 +26,17 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    console.log("⚠️ No user, redirecting to login");
-    // Store the current path before redirecting
     setRedirectPath(location.pathname);
     navigate('/login', { state: { from: location }, replace: true });
     return null;
   }
 
   if (!profile) {
-    console.log("⚠️ No profile, redirecting to onboarding");
-    // Store the current path before redirecting to onboarding
     setRedirectPath(location.pathname);
     navigate('/onboarding', { state: { from: location }, replace: true });
     return null;
   }
 
-  console.log("✅ Route authorized:", location.pathname);
   return <>{children}</>;
 }
 
