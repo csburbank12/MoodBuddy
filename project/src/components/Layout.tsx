@@ -1,4 +1,9 @@
 import React from 'react';
+
+// This is a layout component that provides a consistent layout and navigation for the application.
+// It uses the AuthContext to get the user's information (user and profile) and provides a sign-out function.
+// The component renders the navigation bar at the top and wraps the main content (children).
+
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, User, BookOpen, School } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

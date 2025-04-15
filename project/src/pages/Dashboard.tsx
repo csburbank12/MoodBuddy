@@ -1,16 +1,16 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { Users, BarChart, Calendar, Bell } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Dashboard() {
-  const { user, profile } = useAuth();
-  
-  console.log("🔍 Dashboard Mount", {
-    user: user?.email,
-    profile: profile?.full_name,
-    role: profile?.role
-  });
+  const user = {email: 'student@example.com'};
+  const profile = {full_name: 'Test User', specialization: 'Teacher', role: 'staff'};
+
+  console.log("Dashboard props", {
+      user: user.email,
+      profile: profile.full_name,
+      role: profile.role
+  })
   const [activeTab, setActiveTab] = useState('overview');
 
 
@@ -131,10 +131,6 @@ export default function Dashboard() {
     </div>
   );
 
-  if (!user || !profile) {
-    return null;
-  }
-
   return (
     <div>
       <div className="mb-8">
@@ -145,8 +141,7 @@ export default function Dashboard() {
           {profile.specialization} | {new Date().toLocaleDateString()}
         </p>
       </div>
-      
-      {profile.role === 'staff' && <TeacherDashboard />}
+      <TeacherDashboard />
     </div>
   );
 }

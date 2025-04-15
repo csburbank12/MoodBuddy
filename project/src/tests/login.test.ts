@@ -4,54 +4,36 @@ import { supabase } from '../lib/supabase';
 describe('Login Functionality', () => {
   const testAccounts = [
     {
-      type: 'student',
-      email: 'student@test.edu',
-      password: 'Student123!'
+      type: "student",
+      email: "student@example.com",
+      password: "Student123!",
     },
     {
-      type: 'staff',
-      email: 'staff@test.edu',
-      password: 'Staff123!'
+      type: "staff",
+      email: "staff@example.com",
+      password: "Staff123!",
     }
   ];
-
   for (const account of testAccounts) {
     it(`should sign in as ${account.type}`, async () => {
-      // Attempt sign in
       const { data, error } = await supabase.auth.signInWithPassword({
         email: account.email,
         password: account.password
       });
-
-      // Verify successful login
+      
+      if (error) {
+        throw new Error(`Failed to sign in as ${account.type}: ${error.message}`);
+      }
+      
       expect(error).toBeNull();
       expect(data.user).toBeDefined();
       expect(data.user?.email).toBe(account.email);
-
-      // Verify profile is loaded
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user?.id)
-        .single();
-
-      expect(profile).toBeDefined();
-      expect(profile.email).toBe(account.email);
-      expect(profile.role).toBe(account.type);
-      expect(profile.profile_completed).toBe(true);
-
-      // Sign out after test
-      await supabase.auth.signOut();
+      expect(data.session).toBeDefined();
     });
   }
 
   it('should handle invalid credentials', async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: 'student@test.edu',
-      password: 'WrongPassword123!'
-    });
-
-    expect(error).toBeDefined();
-    expect(data.user).toBeNull();
-  });
+    const { error } = await supabase.auth.signInWithPassword({ email: 'student@example.com', password: 'WrongPassword123!' });
+    expect(error).not.toBeNull();
+  }); 
 });

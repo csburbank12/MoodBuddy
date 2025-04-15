@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, AuthError, Session } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
   id: string;
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (session?.user) {
             console.log("👤 Fetching profile for:", session.user.email);
-            let profile = await fetchUserProfile(session.user.id);
+            let profile = await fetchUserProfile(session.user.id, session.user.email ?? "");
             
             if (!profile) {
               console.log("⚠️ No profile found, attempting to create one");
@@ -170,11 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setLoading(false);
         }
-      } catch (error) {
-        console.error("❌ Error getting initial session:", error);
-        if (mounted) {
-          setLoading(false);
-        }
       }
     }
 
@@ -195,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           try {
             console.log("🔑 User authenticated:", session.user.id);
-            console.log("👤 Fetching profile after auth change:", session.user.email);
+            console.log("👤 Fetching profile after auth change:", session.user.email ?? "");
             let profile = await fetchUserProfile(session.user.id);
             
             if (!profile) {

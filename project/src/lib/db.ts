@@ -8,18 +8,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Database service
-export const dbService = {
+class DatabaseError extends Error {
+  constructor(message: string, public originalError?: any) {
+    super(message);
+    this.name = 'DatabaseError';
+  }
+}
+
+export const databaseService = {
   async createUser(data: {
     email: string;
     full_name: string;
     role: 'student' | 'staff';
     grade_level?: string;
     age_group?: string;
-  }): Promise<any> {
+  }): Promise<any> {    
     const { data: userData, error } = await supabase.auth.signUp({
       email: data.email,
-      password: Math.random().toString(36).slice(-8), // Temporary random password
+      password: Math.random().toString(36).slice(-10), // Temporary random password
       options: {
         data: {
           full_name: data.full_name,
@@ -31,7 +37,7 @@ export const dbService = {
     });
 
     if (error) {
-      console.error('Error creating user:', error);
+      console.error('Failed to create user:', error);
       throw error;
     }
 
@@ -46,7 +52,7 @@ export const dbService = {
       .single();
 
     if (error) {
-      console.error('Error fetching user:', error);
+      console.error('Failed to fetch user:', error);
       throw error;
     }
 
@@ -67,7 +73,7 @@ export const dbService = {
       .single();
 
     if (error) {
-      console.error('Error creating mood entry:', error);
+      console.error('Failed to create mood entry:', error);
       throw error;
     }
 
@@ -75,15 +81,15 @@ export const dbService = {
   },  
 
   async getUserMoodEntries(userId: string): Promise<any[]> {
-    const { data, error } = await supabase
-      .from('mood_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Error fetching mood entries:', error);
-      throw error;
-    }
-    return data || [];
-  },
+        const { data, error } = await supabase
+          .from('mood_entries')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        if (error) {
+          console.error('Error fetching mood entries:', error);
+          throw new DatabaseError('Failed to fetch mood entries', error);
+        }
+        return data || [];
+      },
 };
