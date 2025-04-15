@@ -10,9 +10,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'supabase-vendor': ['@supabase/supabase-js']
         }
-      }
     }
   },
   resolve: {
@@ -24,8 +22,5 @@ export default defineConfig({
     host: 'localhost',
     port: 3004,
     strictPort: false
-  },
-  optimizeDeps: {
-    exclude: ['lucide-react']
-  },
+  }
 });
