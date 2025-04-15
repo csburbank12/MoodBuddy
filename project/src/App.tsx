@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Layout from './components/Layout';
+import { supabaseConnection } from './lib/supabaseConnection';
 
 const LandingRedirect = () => {
   return <Navigate to="/dashboard" replace />;
 };
+
 
 const App = () => (
   <Router>
@@ -19,6 +21,9 @@ const App = () => (
       } />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
+    {
+      supabaseConnection()
+    }
   </Router>
 );
 
