@@ -10,10 +10,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { user, profile, loading, setRedirectPath } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-
+    const { user, profile, loading, setRedirectPath } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
+  
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -24,16 +24,16 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
+  
   if (!user) {
     setRedirectPath(location.pathname);
     navigate('/login', { state: { from: location }, replace: true });
     return null;
   }
-
+  
   if (!profile) {
     setRedirectPath(location.pathname);
-    navigate('/onboarding', { state: { from: location }, replace: true });
+      navigate('/onboarding', { state: { from: location }, replace: true });
     return null;
   }
 

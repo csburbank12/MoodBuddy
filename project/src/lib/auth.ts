@@ -63,6 +63,7 @@ export class AuthService {
         password: string
     ): Promise<{ user: User | null; error: Error | null }> {
         try {
+            console.log('Attempting to sign in with:', email, password); // Add this line
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
@@ -78,12 +79,14 @@ export class AuthService {
                     email: data.user.email!,
                     emailConfirmed: !!data.user.email_confirmed_at,
                 };
+                console.log('User signed in successfully:', user); // Add this line
                 return { user, error: null };
             }
 
             throw new Error('Failed to sign in');
         } catch (err) {
-            return {
+             console.error('Sign in failed:', err); // Add this line
+             return {
                 user: null,
                 error: err instanceof Error ? err : new Error('Failed to sign in'),
             };
@@ -135,6 +138,7 @@ export class AuthService {
 
     async getCurrentUser(): Promise<User | null> {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Current session:', session);
 
         if (session?.user) {
             return { id: session.user.id, email: session.user.email!, emailConfirmed: !!session.user.email_confirmed_at };

@@ -20,11 +20,11 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
-    console.log("🔑 Attempting login:", email);
-    
+
+    console.log('🔑 Attempting login:', email);
+
     try {
-      const { user, error } = await signIn(email.trim(), password.trim());
+      const { user, error } = await signIn(email.trim(), password.trim()); console.log('supabase auth.signIn result:', { user, error });
       
       if (error) {
         console.error("❌ Login error:", error);
