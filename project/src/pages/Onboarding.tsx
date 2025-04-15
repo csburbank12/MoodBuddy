@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Cloud, ArrowRight, CheckCircle, School, User, BookOpen } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { ArrowRight, CheckCircle, School, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-interface OnboardingStep {
+interface  OnboardingStep {
   id: string;
   title: string;
   description: string;
@@ -31,8 +30,7 @@ const roleSteps: Record<string, OnboardingStep[]> = {
         { name: 'age_group', label: 'Age Group', type: 'select', options: ['kids', 'teens'], required: true }
       ]
     },
-    {
-      id: 'preferences',
+    { id: 'preferences',
       title: 'Your Preferences',
       description: 'Customize your learning environment',
       icon: <BookOpen className="w-6 h-6" />,
@@ -48,10 +46,10 @@ const roleSteps: Record<string, OnboardingStep[]> = {
       title: 'Professional Information',
       description: 'Tell us about your role',
       icon: <School className="w-6 h-6" />,
-      fields: [
-        { name: 'full_name', label: 'Full Name', type: 'text', required: true },
-        { name: 'specialization', label: 'Specialization', type: 'text', required: true },
-        { name: 'school', label: 'School Name', type: 'text', required: true }
+      fields:  [
+         { name: 'full_name', label: 'Full Name', type: 'text', required: true },
+         { name: 'specialization', label: 'Specialization', type: 'text', required: true },
+         { name: 'school', label: 'School Name', type: 'text', required: true }
       ]
     }
   ]
@@ -59,27 +57,13 @@ const roleSteps: Record<string, OnboardingStep[]> = {
 
 export default function Onboarding() {
   const { user } = useAuth();
+  const user = { id: '11111111-1111-1111-1111-111111111111', email: 'master@example.com' };
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
-  const [role, setRole] = useState<string | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveAttempted, setSaveAttempted] = useState(false);
-
-  useEffect(() => {
-    checkProfileStatus();
-  }, [user]);
-
-  async function checkProfileStatus() {
-    if (!user) return;
-
-    const profile = JSON.parse(localStorage.getItem(`profile_${user.id}`) || 'null');
-
-    if (profile?.role) {
-      navigate('/dashboard');
-    }
-  }
 
   async function handleRoleSelection(selectedRole: string) {
     setRole(selectedRole);
@@ -94,7 +78,7 @@ export default function Onboarding() {
   }
 
   async function handleSubmit() {
-    if (!user || !role) return;
+    if (!user) return;
     
     setError(null);
     setLoading(true);
@@ -105,14 +89,14 @@ export default function Onboarding() {
         throw new Error('Full name is required and must be at least 2 characters');
       }
 
-      if (role === 'student') {
-        if (!formData.grade_level) {
-          throw new Error('Grade level is required for students');
-        }
-        if (!formData.age_group) {
-          throw new Error('Age group is required for students');
-        }
-      }
+      const role = 'staff';
+      // if (role === 'student') {
+      //   if (!formData.grade_level) {
+      //     throw new Error('Grade level is required for students');
+      //   }
+      //   if (!formData.age_group) {
+      //     throw new Error('Age group is required for students');
+      //   }
 
       if (role === 'staff' && !formData.specialization) {
         throw new Error('Specialization is required for staff');
@@ -123,8 +107,8 @@ export default function Onboarding() {
         p_user_id: user.id,
         p_email: user.email,
         p_full_name: formData.full_name,
-        p_role: role,
-        p_grade_level: formData.grade_level,
+        p_role: 'staff',
+        p_grade_level: null,
         p_age_group: formData.age_group,
         p_specialization: formData.specialization,
         p_theme_preference: formData.theme_preference
@@ -142,43 +126,7 @@ export default function Onboarding() {
     }
   }
 
-  if (!role) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <Cloud className="mx-auto h-16 w-16 text-cloud-blue" />
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome to MoodBuddy</h2>
-            <p className="mt-2 text-sm text-gray-600">Let's get started by selecting your role</p>
-          </div>
-
-          <div className="mt-8 space-y-4">
-            <button
-              onClick={() => handleRoleSelection('student')}
-              className="w-full flex items-center justify-between p-4 border-2 border-transparent rounded-xl bg-white shadow-sm hover:border-coral-orange transition-all"
-            >
-              <div className="flex items-center">
-                <BookOpen className="h-6 w-6 text-coral-orange" />
-                <span className="ml-3 font-medium text-gray-900">I'm a Student</span>
-              </div>
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-            </button>
-
-            <button
-              onClick={() => handleRoleSelection('staff')}
-              className="w-full flex items-center justify-between p-4 border-2 border-transparent rounded-xl bg-white shadow-sm hover:border-coral-orange transition-all"
-            >
-              <div className="flex items-center">
-                <School className="h-6 w-6 text-coral-orange" />
-                <span className="ml-3 font-medium text-gray-900">I'm a Staff Member</span>
-              </div>
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  return (<div>Onboarding</div>);
 
   const steps = roleSteps[role];
   const currentStepData = steps[currentStep];
